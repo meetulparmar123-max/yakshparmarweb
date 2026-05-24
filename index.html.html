@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAKSH PARMAR | Digital Artist & Motion Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --obsidian: #050505;
+            --charcoal: #0f0f0f;
+            --accent: #ff4d00; /* Glowing Orange */
+            --accent-dim: #ff4d0040;
+            --white: #f0f0f0;
+            --wireframe: #00f0ff;
+        }
+
+        body {
+            background-color: var(--obsidian);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            cursor: none; /* Custom cursor */
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); }
+
+        /* Noise Texture Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.07;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Anamorphic Lens Flare */
+        .lens-flare {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 77, 0, 0.1), transparent);
+            box-shadow: 0 0 20px rgba(255, 77, 0, 0.2);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Custom Cursor */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: var(--accent); }
+        .cursor-outline { 
+            width: 40px; height: 40px; 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        body:hover .cursor-outline.hovered {
+            width: 80px; height: 80px;
+            background-color: rgba(255, 77, 0, 0.1);
+            border-color: var(--accent);
+            mix-blend-mode: screen;
+        }
+
+        /* Typography */
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+        
+        /* 3D Big Head Text */
+        .hero-text-container {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        .big-head {
+            font-size: clamp(5rem, 15vw, 20rem);
+            line-height: 0.85;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: var(--white);
+            text-transform: uppercase;
+            transform: rotateX(10deg) rotateY(-5deg) rotateZ(2deg);
+            text-shadow: 
+                1px 1px 0 rgba(255,255,255,0.1),
+                2px 2px 0 rgba(255,255,255,0.1),
+                3px 3px 0 rgba(255,255,255,0.1),
+                4px 4px 0 rgba(255,255,255,0.1),
+                5px 5px 0 rgba(255,255,255,0.1),
+                6px 6px 0 rgba(255,255,255,0.1),
+                7px 7px 0 rgba(255,255,255,0.1),
+                8px 8px 0 rgba(255,255,255,0.1),
+                9px 9px 0 rgba(255,255,255,0.1),
+                10px 10px 20px rgba(0,0,0,0.5);
+            background: linear-gradient(to bottom, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        .big-head::after {
+            content: 'YAKSH PARMAR';
+            position: absolute;
+            left: 0; top: 0;
+            z-index: -1;
+            color: transparent;
+            text-shadow: 
+                0 0 10px rgba(255, 77, 0, 0.3),
+                0 0 20px rgba(255, 77, 0, 0.2),
+                0 0 40px rgba(255, 77, 0, 0.1);
+            background: none;
+            -webkit-text-fill-color: transparent;
+            transform: translateZ(-20px);
+        }
+
+        /* Split Screen Slider */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            overflow: hidden;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .slider-handle {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 4px;
+            background: var(--accent);
+            cursor: ew-resize;
+            z-index: 20;
+            box-shadow: 0 0 20px var(--accent);
+        }
+        .slider-handle::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px; height: 48px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            background: var(--obsidian);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--accent-dim);
+        }
+        .slider-handle-icon {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 21;
+            color: var(--accent);
+            pointer-events: none;
+        }
+        
+        /* Wireframe Mode Styling */
+        .wireframe-layer {
+            background-color: #000;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--wireframe);
+            font-family: 'Courier New', monospace;
+        }
+        .wireframe-box {
+            border: 1px solid var(--wireframe);
+            background: rgba(0, 240, 255, 0.05);
+            position: absolute;
+        }
+        .node-graph {
+            position: absolute;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+
+        /* Utility */
+        .text-accent { color: var(--accent); }
+        .bg-accent { background-color: var(--accent); }
+        .border-accent { border-color: var(--accent); }
+        
+        .reveal-text {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+        .char {
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Scramble Text Effect Class */
+        .scramble-text { display: inline-block; }
+    </style>
+</head>
+<body class="antialiased selection:bg-orange-500 selection:text-black">
+
+    <!-- Noise & Effects -->
+    <div class="noise-overlay"></div>
+    <div class="lens-flare top-[20%]"></div>
+    <div class="lens-flare top-[65%] opacity-50"></div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference">
+        <div class="text-sm font-bold tracking-[0.2em] uppercase scramble-text" data-text="YAKSH PARMAR">YAKSH PARMAR</div>
+        <div class="hidden md:flex gap-8 text-xs font-medium tracking-widest uppercase">
+            <a href="#" class="hover:text-accent transition-colors magnetic-link">Work</a>
+            <a href="#" class="hover:text-accent transition-colors magnetic-link">Process</a>
+            <a href="#" class="hover:text-accent transition-colors magnetic-link">Contact</a>
+        </div>
+        <div class="text-xs font-mono text-gray-500 border border-gray-800 px-3 py-1 rounded-full">
+            EST. 2024
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="relative">
+        
+        <!-- Hero Section -->
+        <section class="h-screen w-full flex flex-col justify-center items-center relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-orange-600 rounded-full blur-[150px] opacity-10 pointer-events-none"></div>
+
+            <div class="hero-text-container text-center z-10 relative">
+                <h1 class="big-head font-display reveal-text" id="hero-title">
+                    <!-- JS will inject spans here -->
+                    YAKSH<br>PARMAR
+                </h1>
+                <div class="mt-8 overflow-hidden">
+                    <p class="text-sm md:text-base font-mono text-gray-400 tracking-[0.3em] uppercase opacity-0" id="hero-subtitle">
+                        Digital Artist & Motion Designer
+                    </p>
+                </div>
+            </div>
+
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0" id="scroll-ind">
+                <span class="text-[10px] tracking-widest uppercase text-gray-500">Explore Process</span>
+                <div class="w-[1px] h-12 bg-gradient-to-b from-orange-500 to-transparent"></div>
+            </div>
+        </section>
+
+        <!-- Process / Split Screen Slider Section -->
+        <section class="relative w-full bg-[#080808] py-20">
+            <div class="px-8 mb-12 flex justify-between items-end">
+                <div>
+                    <h2 class="text-4xl md:text-6xl font-display font-bold mb-2">THE PROCESS</h2>
+                    <p class="text-gray-500 font-mono text-sm max-w-md">
+                        Scrub to reveal the transition from technical wireframes and node-based logic to final high-fidelity 3D assets.
+                    </p>
+                </div>
+                <div class="hidden md:block text-right">
+                    <div class="text-xs font-mono text-orange-500 mb-1">INTERACTIVE VIEWPORT</div>
+                    <div class="text-[10px] text-gray-600">DRAG TO COMPARE</div>
+                </div>
+            </div>
+
+            <!-- Slider Component -->
+            <div class="slider-container group" id="process-slider">
+                
+                <!-- Left Side: Wireframe / Technical -->
+                <div class="absolute top-0 left-0 h-full w-full wireframe-layer flex items-center justify-center overflow-hidden" id="layer-left">
+                    <!-- Simulated Node Graphs -->
+                    <svg class="node-graph opacity-30">
+                        <path d="M100,100 L300,150 L500,100 L700,200" fill="none" stroke="#00f0ff" stroke-width="1"/>
+                        <circle cx="100" cy="100" r="4" fill="#00f0ff"/>
+                        <circle cx="300" cy="150" r="4" fill="#00f0ff"/>
+                        <rect x="480" y="80" width="40" height="40" stroke="#00f0ff" fill="none"/>
+                        <path d="M50,400 L200,350 L400,450 L600,400" fill="none" stroke="#00f0ff" stroke-width="1" stroke-dasharray="5,5"/>
+                    </svg>
+                    
+                    <!-- Wireframe UI Elements -->
+                    <div class="wireframe-box w-64 h-80 top-20 left-20 p-4">
+                        <div class="w-full h-4 border-b border-[#00f0ff] mb-4 opacity-50"></div>
+                        <div class="w-3/4 h-2 bg-[#00f0ff] mb-2 opacity-30"></div>
+                        <div class="w-1/2 h-2 bg-[#00f0ff] mb-2 opacity-30"></div>
+                        <div class="mt-auto absolute bottom-4 right-4 text-[10px]">VECTOR_LAYERS.ai</div>
+                    </div>
+
+                    <div class="absolute bottom-10 right-10 font-mono text-xs">
+                        <span class="text-orange-500">></span> RENDER_ENGINE: CYCLES<br>
+                        <span class="text-orange-500">></span> NODES: ACTIVE<br>
+                        <span class="text-orange-500">></span> RES: 8K
+                    </div>
+
+                    <!-- Center Content Mock -->
+                    <div class="text-center opacity-40">
+                        <h3 class="text-6xl font-display font-bold text-[#00f0ff] tracking-tighter">WIREFRAME</h3>
+                        <div class="mt-4 grid grid-cols-3 gap-2 w-64 mx-auto">
+                            <div class="h-1 bg-[#00f0ff]"></div>
+                            <div class="h-1 bg-[#00f0ff]"></div>
+                            <div class="h-1 bg-[#00f0ff]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: High Fidelity / Assets -->
+                <div class="absolute top-0 right-0 h-full w-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden" id="layer-right">
+                    <!-- Using uploaded images as background collage -->
+                    <div class="absolute inset-0 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+                        <div class="absolute top-10 left-10 w-64 h-40 bg-cover bg-center rounded border border-gray-800 shadow-2xl" style="background-image: url('/mnt/agents/upload/8c4acc242988409.69789f8bd1dec.png'); transform: rotate(-2deg);"></div>
+                        <div class="absolute bottom-20 right-20 w-72 h-48 bg-cover bg-center rounded border border-gray-800 shadow-2xl" style="background-image: url('/mnt/agents/upload/f04821225185363.6818f7409dd89.png'); transform: rotate(3deg);"></div>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-60 bg-cover bg-center rounded border border-gray-800 shadow-2xl z-10" style="background-image: url('/mnt/agents/upload/abe0a7226174735.682a440b30fd2.png');"></div>
+                    </div>
+                    
+                    <div class="relative z-20 text-center mix-blend-difference">
+                        <h3 class="text-6xl md:text-8xl font-display font-bold text-white tracking-tighter">MY ART  !</h3>
+                        <p class="text-orange-500 font-mono mt-4 tracking-widest">PHOTOSHOP / BLENDER / ILLUSTRATOR</p>
+                    </div>
+                </div>
+
+                <!-- The Handle -->
+                <div class="slider-handle" id="slider-handle" style="left: 50%;">
+                    <div class="slider-handle-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Selected Works Grid (Visual Filler) -->
+        <section class="py-24 px-8 bg-[#050505]">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="coffecup.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Menu Design">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">Royal Café</h4>
+                        <p class="text-xs text-gray-400 font-mono">BRAND IDENTITY / PRINT</p>
+                    </div>
+                </div>
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="fruve soda.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Book Mockup">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">K-Book</h4>
+                        <p class="text-xs text-gray-400 font-mono">3D MOCKUP / GOLD FOIL</p>
+                    </div>
+                </div>
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="fruve.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Book Mockup">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">logo</h4>
+                        <p class="text-xs text-gray-400 font-mono">3D MOCKUP / GOLD FOIL</p>
+                    </div>
+                </div>
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="portfolio.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Logo Design">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">Früvé</h4>
+                        <p class="text-xs text-gray-400 font-mono">TYPOGRAPHY / LOGO</p>
+                    </div>
+                </div>
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="menu.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Portfolio">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">memu</h4>
+                        <p class="text-xs text-gray-400 font-mono">MOTION / POSTER</p>
+                    </div>
+                </div>
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="full size.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Portfolio">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">typography</h4>
+                        <p class="text-xs text-gray-400 font-mono">MOTION / POSTER</p>
+                    </div>
+                </div>
+                 <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="magazine cover.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Portfolio">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">Magazine</h4>
+                        <p class="text-xs text-gray-400 font-mono">MOTION / POSTER</p>
+                    </div>
+                </div>
+                <div class="aspect-square bg-[#0f0f0f] relative group overflow-hidden border border-white/5">
+                    <img src="typiqal.png" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" alt="Portfolio">
+                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black to-transparent">
+                        <h4 class="text-2xl font-display font-bold">Typiqal</h4>
+                        <p class="text-xs text-gray-400 font-mono">MOTION / POSTER</p>
+                    </div>
+                </div>
+                <!-- वीडियो सेक्शन यहाँ से शुरू होता है -->
+<section class="custom-video-section">
+    
+    <!-- CSS स्टाइल्स (HTML के अंदर ही मिक्स की गई हैं) -->
+    <style>
+        .custom-video-section {
+            width: 100%;
+            padding: 60px 0;
+            background-color: #0b0b0b; /* आपकी डार्क वेबसाइट थीम से मैच करने के लिए */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .custom-video-container {
+            width: 90%;
+            max-width: 1100px;
+            border-radius: 16px; /* कोनों को घुमावदार बनाने के लिए */
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); /* सुंदर शैडो इफ़ेक्ट */
+            border: 1px solid #222; /* हल्का बॉर्डर */
+        }
+
+        .custom-video-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+
+    <!-- वीडियो प्लेयर कंटेनर -->
+    <div class="custom-video-container">
+        <!-- 
+          controls: प्लेयर के बटन दिखाएगा 
+          autoplay: वीडियो अपने आप चालू होगी 
+          muted: आवाज बंद रखेगा (ताकि ब्राउज़र वीडियो को ब्लॉक न करे)
+          loop: खत्म होने पर वीडियो दोबारा चलेगी
+        -->
+        <video controls autoplay muted loop playsinline>
+            <source src="WhatsApp Video 2026-05-23 at 9.20.49 PM.mp4" type="video/mp4">
+            आपका ब्राउज़र वीडियो टैग को सपोर्ट नहीं करता है।
+        </video>
+    </div>
+
+</section>
+<!-- वीडियो सेक्शन यहाँ समाप्त होता है -->
+
+<section class="custom-video-section">
+    
+    <!-- CSS स्टाइल्स (HTML के अंदर ही मिक्स की गई हैं) -->
+    <style>
+        .custom-video-section {
+            width: 100%;
+            padding: 60px 0;
+            background-color: #0b0b0b; /* आपकी डार्क वेबसाइट थीम से मैच करने के लिए */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .custom-video-container {
+            width: 90%;
+            max-width: 1100px;
+            border-radius: 16px; /* कोनों को घुमावदार बनाने के लिए */
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); /* सुंदर शैडो इफ़ेक्ट */
+            border: 1px solid #222; /* हल्का बॉर्डर */
+        }
+
+        .custom-video-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+
+    <!-- वीडियो प्लेयर कंटेनर -->
+    <div class="custom-video-container">
+        <!-- 
+          controls: प्लेयर के बटन दिखाएगा 
+          autoplay: वीडियो अपने आप चालू होगी 
+          muted: आवाज बंद रखेगा (ताकि ब्राउज़र वीडियो को ब्लॉक न करे)
+          loop: खत्म होने पर वीडियो दोबारा चलेगी
+        -->
+        <video controls autoplay muted loop playsinline>
+            <source src="WhatsApp Video 2026-05-23 at 9.20.57 PM.mp4" type="video/mp4">
+            आपका ब्राउज़र वीडियो टैग को सपोर्ट नहीं करता है।
+        </video>
+    </div>
+
+</section>
+<!-- वीडियो सेक्शन यहाँ समाप्त होता है -->
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 px-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-xs font-mono text-gray-500">
+            <div>© 2024 YAKSH PARMAR. ALL RIGHTS RESERVED.</div>
+             <div class="flex gap-4 mt-4 md:mt-0">
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">INSTAGRAM</a>
+                <a href="https://behance.net" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">BEHANCE</a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">LINKEDIN</a>
+                 <a href="https://drive.google.com/drive/folders/1dyfOOg2eL8xYc2DxHDttnGZNcPwz4Vgi" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Portfolio</a>
+            </div>
+            </div>
+
+            <div> 
+               <h1 style="font-size: 2rem; margin-bottom: 10px;">+9409903138</h1>
+               <h1 class="footer-email-large">
+                   <a href="mailto:yakshparmar123@gmail.com" class="email-link">yakshparmar123@gmail.com</a>
+               </h1>
+
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // --- Custom Cursor Logic ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        const magneticLinks = document.querySelectorAll('.magnetic-link');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Outline follows with slight delay (using animate for smoothness)
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        magneticLinks.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                cursorOutline.classList.add('hovered');
+            });
+            link.addEventListener('mouseleave', () => {
+                cursorOutline.classList.remove('hovered');
+            });
+        });
+
+        // --- Text Scramble Effect for Nav ---
+        class TextScramble {
+            constructor(el) {
+                this.el = el;
+                this.chars = '!<>-_\\/[]{}—=+*^?#________';
+                this.update = this.update.bind(this);
+            }
+            setText(newText) {
+                const oldText = this.el.innerText;
+                const length = Math.max(oldText.length, newText.length);
+                const promise = new Promise((resolve) => this.resolve = resolve);
+                this.queue = [];
+                for (let i = 0; i < length; i++) {
+                    const from = oldText[i] || '';
+                    const to = newText[i] || '';
+                    const start = Math.floor(Math.random() * 40);
+                    const end = start + Math.floor(Math.random() * 40);
+                    this.queue.push({ from, to, start, end });
+                }
+                cancelAnimationFrame(this.frameRequest);
+                this.frame = 0;
+                this.update();
+                return promise;
+            }
+            update() {
+                let output = '';
+                let complete = 0;
+                for (let i = 0, n = this.queue.length; i < n; i++) {
+                    let { from, to, start, end, char } = this.queue[i];
+                    if (this.frame >= end) {
+                        complete++;
+                        output += to;
+                    } else if (this.frame >= start) {
+                        if (!char || Math.random() < 0.28) {
+                            char = this.randomChar();
+                            this.queue[i].char = char;
+                        }
+                        output += `<span class="text-orange-500">${char}</span>`;
+                    } else {
+                        output += from;
+                    }
+                }
+                this.el.innerHTML = output;
+                if (complete === this.queue.length) {
+                    this.resolve();
+                } else {
+                    this.frameRequest = requestAnimationFrame(this.update);
+                    this.frame++;
+                }
+            }
+            randomChar() {
+                return this.chars[Math.floor(Math.random() * this.chars.length)];
+            }
+        }
+
+        const el = document.querySelector('.scramble-text');
+        const fx = new TextScramble(el);
+        let counter = 0;
+        const next = () => {
+            fx.setText(el.dataset.text).then(() => {
+                setTimeout(next, 3000);
+            });
+        };
+        next();
+
+
+        // --- GSAP Animations ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero Entrance
+        const tl = gsap.timeline();
+        
+        tl.from(".big-head", {
+            y: 100,
+            opacity: 0,
+            rotationX: 45,
+            duration: 1.5,
+            ease: "power3.out"
+        })
+        .to("#hero-subtitle", {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power2.out"
+        }, "-=1")
+        .to("#scroll-ind", {
+            opacity: 1,
+            duration: 1
+        }, "-=0.5");
+
+        // Parallax on Scroll
+        gsap.to(".big-head", {
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "bottom top",
+                scrub: 1
+            },
+            y: 200,
+            filter: "blur(10px)",
+            opacity: 0.3
+        });
+
+
+        // --- Split Screen Slider Logic ---
+        const sliderContainer = document.getElementById('process-slider');
+        const layerLeft = document.getElementById('layer-left');
+        const handle = document.getElementById('slider-handle');
+        let isDragging = false;
+
+        const updateSlider = (x) => {
+            const rect = sliderContainer.getBoundingClientRect();
+            let percentage = ((x - rect.left) / rect.width) * 100;
+            
+            // Clamp
+            percentage = Math.max(0, Math.min(100, percentage));
+            
+            // Update visual elements
+            layerLeft.style.width = `${percentage}%`;
+            handle.style.left = `${percentage}%`;
+            
+            // Dynamic color shift based on position
+            if(percentage > 80) {
+                handle.style.boxShadow = "0 0 30px #ffffff";
+            } else {
+                handle.style.boxShadow = "0 0 20px #ff4d00";
+            }
+        };
+
+        // Mouse Events
+        handle.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            updateSlider(e.clientX);
+        });
+
+        // Touch Events
+        handle.addEventListener('touchstart', () => isDragging = true);
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            updateSlider(e.touches[0].clientX);
+        });
+
+        // Click on container to jump
+        sliderContainer.addEventListener('click', (e) => {
+            updateSlider(e.clientX);
+        });
+
+        // Initial set
+        updateSlider(sliderContainer.getBoundingClientRect().left + (sliderContainer.getBoundingClientRect().width / 2));
+
+    </script>
+</body>
+</html>
